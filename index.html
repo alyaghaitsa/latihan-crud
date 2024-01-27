@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container mt-4" id="crudApp">
+        <h2 class="alert alert-success text-center">
+            Latihan CRUD dengan menggunakan Vue JS dan MySQL
+        </h2>
+        <div class="card">
+            <div class="card-header">
+                <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalTambah">Tambah Data</button>
+            </div>
+            <div class="card-body">
+                <table class="table table-stripped">
+                    <thead>
+                        <tr class="bg-dark text-white">
+                            <th>No</th>
+                            <th>Nama Depan</th>
+                            <th>Nama Belakang</th>
+                            <th>Edit</th>
+                            <th>Hapus</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item, index) in allData" :key="index">
+                            <td>{{ index + 1 }}</td>
+                            <td>{{ item.first_name }}</td>
+                            <td>{{ item.last_name }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalEdit" @click="editData(item.id, item.first_name, item.last_name)" >Edit</button>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" data-bs-toggle="modal" aria-details="#modalhapus" @click="hapusData(item.id)">Hapus</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Modal Tambah -->
+        <div class="modal fade" id="modalTambah" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Tambah Data</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form @submit.prevent="simpanData">
+                            <div class="mb-3">
+                                <label for="namaDepan" class="form-label">Nama Depan</label>
+                                <input type="text" class="form-control" v-model="first_name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="namaBelakang" class="form-label">Nama Belakang</label>
+                                <input type="text" class="form-control" v-model="last_name" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal Edit -->
+        <div class="modal fade" id="modalEdit" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Edit Data</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form @submit.prevent="simpanEdit">
+                            <div class="mb-3">
+                                <label for="editNamaDepan" class="form-label">Nama Depan</label>
+                                <input type="text" class="form-control" v-model="edit_first_name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editNamaBelakang" class="form-label">Nama Belakang</label>
+                                <input type="text" class="form-control" v-model="edit_last_name" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    
+    <script>
+        var app = new Vue({
+            el: "#crudApp",
+            data: {
+                allData: [],
+                first_name: "",
+                last_name: "",
+                id: null,
+                edit_first_name: "",
+                edit_last_name: "",
+            },
+            methods: {
+                fetchAllData: function () {
+                    axios
+                        .post("action.php", {
+                            action: "fetchall",
+                        })
+                        .then(function (response) {
+                            app.allData = response.data;
+                        })
+                        .catch(function (error) {
+                            console.error("Error fetching data:", error);
+                        });
+                },
+                simpanData: function () {
+                    if (app.first_name === "" || app.last_name === "") {
+                        alert("Isi semua data terlebih dahulu!");
+                    } else {
+                        axios
+                            .post("action.php", {
+                                action: "insert",
+                                first_name: app.first_name,
+                                last_name: app.last_name,
+                            })
+                            .then(function (response) {
+                                app.fetchAllData();
+                                $("#modalTambah").modal("hide");
+                                app.first_name = "";
+                                app.last_name = "";
+                            })
+                            .catch(function (error) {
+                                console.error("Error inserting data:", error);
+                            });
+                    }
+                },
+                editData: function (id, first_name, last_name) {
+                    app.id = id;
+                    app.edit_first_name = first_name;
+                    app.edit_last_name = last_name;
+                    $("#modalEdit").modal("show");
+                },
+                simpanEdit: function () {
+                    axios
+                        .post("action.php", {
+                            action: "update",
+                            id: app.id,
+                            first_name: app.edit_first_name,
+                            last_name: app.edit_last_name,
+                        })
+                        .then(function (response) {
+                            app.fetchAllData();
+                            $("#modalEdit").modal("hide");
+                            app.edit_first_name = "";
+                            app.edit_last_name = "";
+                        })
+                        .catch(function (error) {
+                            console.error("Error updating data:", error);
+                        });
+                },
+                hapusData: function (id) {
+                    if (confirm("Apakah Anda yakin ingin menghapus data?")) {
+                        axios
+                            .post("action.php", {
+                                action: "delete",
+                                id: id,
+                            })
+                            .then(function (response) {
+                                app.fetchAllData();
+                            })
+                            .catch(function (error) {
+                                console.error("Error deleting data:", error);
+                            });
+                    }
+                },
+            },
+            created: function () {
+                this.fetchAllData();
+            },
+        });
+    </script>
+</body>
+</html>
